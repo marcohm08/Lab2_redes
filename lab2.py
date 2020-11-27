@@ -7,7 +7,7 @@ import scipy.io
 import scipy.misc
 from scipy.io import wavfile
 from scipy import signal
-from scipy.fftpack import fft,fftfreq,ifft
+from scipy.fftpack import fft2,fftshift
 from PIL import Image
 
 import numpy as np
@@ -39,6 +39,10 @@ def convolve(matrix, kernel):
                     aux.append(pix)
             aux = np.array(aux)
             value = sum(aux)
+            if(value > 255):
+                value = 255
+            elif(value < 0):
+                value = 0
             auxrow.append(value)
         convoluted.append(auxrow)
     convoluted = np.array(convoluted)
@@ -92,8 +96,49 @@ def convolutionTest(matrix,kernelCol,kernelRow):
     print("Se lleva a cabo la convolucion correctamente")
     return True
 
-im = Image.open("Lab2_redes/lena512.bmp")
-image_array = np.array(im)
+class ImageObject:
+    def __init__(self,path):
+        self.name = path
+        self.image = Image.open(path)
+        self.imageMatrix = np.array(self.image)
+    def convolveImage(self,kernel):
+        result = convolve(self.imageMatrix,kernel)
+        return result
+    def fourierTransform(self):
+        fourierData = fft2(self.imageMatrix)
+        fourierOriginal = fftshift(fourierData)
+        g = plt.figure()
+        plt.imshow(np.log(abs(fourierOriginal)))
+        g.savefig("test")
+        
+    def saveImage(self):
+        self.image.save(self.name)
 
-result = convolutionTest(image_array,3,3)
-#print(image_array)
+
+if __name__ == "__main__":
+    
+
+    realImage = ImageObject("lena512.bmp")
+
+    convolutionTest(realImage.imageMatrix,3,3)
+
+    gaussKer= np.array([[1,4,6,4,1],
+                        [4, 16, 24, 16, 4],
+                        [6, 24, 36, 24, 6],
+                        [4, 16, 24, 16, 4],
+                        [1, 4, 6, 4, 1]])
+    
+    edgeKer= np.array([[1,2,0,-2,-1],
+                        [1,2,0,-2,-1],
+                        [1,2,0,-2,-1],
+                        [1,2,0,-2,-1],
+                        [1,2,0,-2,-1]])
+
+    realImage.fourierTransform()
+    plt.show
+
+
+
+
+
+
