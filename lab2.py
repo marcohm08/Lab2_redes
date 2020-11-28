@@ -35,10 +35,10 @@ def convolve(matrix, kernel):
             aux = []
             for n in range(0,kercol):
                 for m in range(0,kerrow):
-                    pix = kernel[n][m] * matrix[b-n][a-n]
+                    pix = kernel[n][m] * matrix[b-n][a-m]
                     aux.append(pix)
             aux = np.array(aux)
-            value = sum(aux)
+            value = np.sum(aux)
             if(value > 255):
                 value = 255
             elif(value < 0):
@@ -64,8 +64,6 @@ def convolutionTest(matrix,kernelCol,kernelRow):
     else:
         rowCenter = int(kernelRow / 2) 
 
-    print(rowCenter)
-
     while(j < kernelCol):
         testRow = []
         while(i < kernelRow):
@@ -81,14 +79,12 @@ def convolutionTest(matrix,kernelCol,kernelRow):
     
     testKernel = np.array(testKernel)
     convoluted = convolve(matrix, testKernel)
-    print(convoluted)
 
 
     colstart = int(kernelCol/2)
     rowStart = int(kernelRow/2)
-    print(len(convoluted[0]))
-    for n in range(colstart,len(matrix) - 1):
-        for m in range(rowStart,len(matrix[0]) - 1):
+    for n in range(colstart,len(matrix) - colstart):
+        for m in range(rowStart,len(matrix[0]) - rowStart):
             if(matrix[n][m] != convoluted[n-colstart][m-rowStart]):
                 print("No se realiza la convolucion adecuadamente")
                 return False
@@ -101,32 +97,45 @@ class ImageObject:
         self.name = path
         self.image = Image.open(path)
         self.imageMatrix = np.array(self.image)
+
     def convolveImage(self,kernel):
         result = convolve(self.imageMatrix,kernel)
-        return result
-    def fourierTransform(self):
+        self.imageMatrix = result
+    
+    def fourierTransform(self, title, saveName):
         fourierData = fft2(self.imageMatrix)
         fourierOriginal = fftshift(fourierData)
         g = plt.figure()
         plt.imshow(np.log(abs(fourierOriginal)))
-        g.savefig("test")
-        
-    def saveImage(self):
-        self.image.save(self.name)
+        if(title == "" or title == None):    
+            plt.title("Transformada de Fourier de imagen")
+        else:
+            plt.title(title)
+        if(saveName == "" or saveName == None):
+            g.savefig("Espectrograma de imagen")
+        else:
+            g.savefig(saveName)
+               
+    def saveImage(self,name):
+        self.image = Image.fromarray(self.imageMatrix.astype(np.uint8))
+        self.image.save(name)
 
 
 if __name__ == "__main__":
     
 
     realImage = ImageObject("lena512.bmp")
+    gaussImage = copy.deepcopy(realImage)
+    edgeImage = copy.deepcopy(realImage)
+    ed2 = ImageObject("im1.png")
 
-    convolutionTest(realImage.imageMatrix,3,3)
+    #convolutionTest(realImage.imageMatrix,5,5)
 
     gaussKer= np.array([[1,4,6,4,1],
                         [4, 16, 24, 16, 4],
                         [6, 24, 36, 24, 6],
                         [4, 16, 24, 16, 4],
-                        [1, 4, 6, 4, 1]])
+                        [1, 4, 6, 4, 1]])/256
     
     edgeKer= np.array([[1,2,0,-2,-1],
                         [1,2,0,-2,-1],
@@ -134,8 +143,24 @@ if __name__ == "__main__":
                         [1,2,0,-2,-1],
                         [1,2,0,-2,-1]])
 
-    realImage.fourierTransform()
-    plt.show
+    edgeKer2= np.array([[1,0,-1],
+                        [2,0,-2],
+                        [1,0,-1]])
+
+    realImage.fourierTransform("Transformada de Fourier imagen original", "Fourier_Original")
+
+    gaussImage.convolveImage(gaussKer)
+    gaussImage.fourierTransform("Transformada de Fourier imagen filtro gaussiano", "Fourier_Gauss")
+    gaussImage.saveImage("Gauss_image.png")
+
+    edgeImage.convolveImage(edgeKer)
+    edgeImage.fourierTransform("Transformada de Fourier iltro de bordes", "Fourier_Edge")
+    edgeImage.saveImage("Edge_image.png")
+
+    #ed2.convolveImage(edgeKer2)
+    #ed2.saveImage("ed2.png")
+
+    plt.show()
 
 
 
