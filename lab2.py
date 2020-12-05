@@ -18,6 +18,20 @@ import copy
 import sys
 
 
+def fillWithZeros(matrix, kernel):
+    dim = int(len(kernel)/ 2)
+    for row in matrix:
+        for i in range(0,dim):
+            row.insert(0,0)
+            row.append(0)
+    
+    zeroRow = [0 for i in range(0,len(matrix[0]))]
+    for j in range(0,dim):
+        matrix.insert(0,zeroRow)
+        matrix.append(zeroRow)
+    return matrix
+
+
 
 # Parte 1: Definir funcion de convolucion, en el caso problematico de los bordes, estos valores seran recortados 
 
@@ -27,7 +41,7 @@ def convolve(matrix, kernel):
     rowlen = len(matrix[0])
     collen = len(matrix)
     kerrow = len(kernel[0])
-    kercol = len(kernel[0])
+    kercol = len(kernel)
 
     for b in range(kercol -1, collen):
         auxrow = []
@@ -45,6 +59,7 @@ def convolve(matrix, kernel):
                 value = 0
             auxrow.append(value)
         convoluted.append(auxrow)
+    convoluted = fillWithZeros(convoluted,kernel)
     convoluted = np.array(convoluted)
     return convoluted
 
@@ -85,7 +100,7 @@ def convolutionTest(matrix,kernelCol,kernelRow):
     rowStart = int(kernelRow/2)
     for n in range(colstart,len(matrix) - colstart):
         for m in range(rowStart,len(matrix[0]) - rowStart):
-            if(matrix[n][m] != convoluted[n-colstart][m-rowStart]):
+            if(matrix[n][m] != convoluted[n][m]):
                 print("No se realiza la convolucion adecuadamente")
                 return False
     
@@ -127,9 +142,9 @@ if __name__ == "__main__":
     realImage = ImageObject("lena512.bmp")
     gaussImage = copy.deepcopy(realImage)
     edgeImage = copy.deepcopy(realImage)
-    ed2 = ImageObject("im1.png")
+    #ed2 = ImageObject("im1.png")
 
-    #convolutionTest(realImage.imageMatrix,5,5)
+    convolutionTest(realImage.imageMatrix,5,5)
 
     gaussKer= np.array([[1,4,6,4,1],
                         [4, 16, 24, 16, 4],
