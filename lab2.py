@@ -1,11 +1,10 @@
-# Lab 1 Redes de Computadores
+# Lab 2 Redes de Computadores
 # Marco Hernandez 
 # 19.318.862-1
 
 import scipy
 import scipy.io
 import scipy.misc
-from scipy.io import wavfile
 from scipy import signal
 from scipy.fftpack import fft2,fftshift
 from PIL import Image
@@ -18,6 +17,11 @@ import copy
 import sys
 
 
+#Function to fill with 0 borders of the convoluted matrix
+#inputs: 
+#   martrix: convoluted matrix
+#   kernel: kernel matrix wich was used to convolute the original image
+# output: convoluted matrix with pixel border values equal to 0
 def fillWithZeros(matrix, kernel):
     dim = int(len(kernel)/ 2)
     for row in matrix:
@@ -32,9 +36,11 @@ def fillWithZeros(matrix, kernel):
     return matrix
 
 
-
-# Parte 1: Definir funcion de convolucion, en el caso problematico de los bordes, estos valores seran recortados 
-
+# Convolution function, that makes the convolution between a matrix of values of an image and a kernel, this kernel must have odd dimensions
+# inputs
+#   matrix: matrix with pixel values if an image
+#   kernel: kernel matrix wich dimension must be odd to have a central element
+# output: convoluted image matrix 
 def convolve(matrix, kernel):
     convoluted = []
 
@@ -63,8 +69,20 @@ def convolve(matrix, kernel):
     convoluted = np.array(convoluted)
     return convoluted
 
-
+# Function to check that the convolution is done in the right way, to do this, we use the convolution with an identity kernel
+# this kernel only has the central element of the matrix equal to 1, the rest of the numbers of the matrix is equal to 0
+# the expected output is the same matrix of the input except of the bordes in wich case, the pixel values will be 0
+# Input:
+#   matrix: matrix wich will be convoluted
+#   kernelCol: number of columns of the kenrl matrix, must be odd
+#   kernelRow: number of rows of the kernel matrix, must be odd
+# Output:
+#   the convoluted matrix if the convolution is done in the right way
+#   False if the convolution is wrong 
 def convolutionTest(matrix,kernelCol,kernelRow):
+    if(kernelCol % 2 == 0 or kernelRow % 2 == 0):
+        print("Kernel dimanesion must be odd")
+        return False
     testKernel = []
     i = 0
     j = 0
@@ -79,6 +97,7 @@ def convolutionTest(matrix,kernelCol,kernelRow):
     else:
         rowCenter = int(kernelRow / 2) 
 
+    # construction of the neutral kernel
     while(j < kernelCol):
         testRow = []
         while(i < kernelRow):
@@ -95,28 +114,32 @@ def convolutionTest(matrix,kernelCol,kernelRow):
     testKernel = np.array(testKernel)
     convoluted = convolve(matrix, testKernel)
 
-
+    # The pixel values that are compared between the original and the convoluted matrix are the pixels in the convoluted matrix than are not in the borders
+    # of the image
     colstart = int(kernelCol/2)
     rowStart = int(kernelRow/2)
     for n in range(colstart,len(matrix) - colstart):
         for m in range(rowStart,len(matrix[0]) - rowStart):
             if(matrix[n][m] != convoluted[n][m]):
-                print("No se realiza la convolucion adecuadamente")
-                return False
+                print("The convolution fails")
+                return False,[]
     
-    print("Se lleva a cabo la convolucion correctamente")
-    return True
+    print("The convolution is successfull")
+    return True,convoluted
 
+# Class to save all elements of an image and the oprations that are done with it
 class ImageObject:
     def __init__(self,path):
         self.name = path
         self.image = Image.open(path)
         self.imageMatrix = np.array(self.image)
 
+    # Method to aplpy the convolution function defined before to the imageMatrix attribute
     def convolveImage(self,kernel):
         result = convolve(self.imageMatrix,kernel)
         self.imageMatrix = result
     
+    #Mehod to apply the 2D fourier transform to the imageMatrix attribute
     def fourierTransform(self, title, saveName):
         fourierData = fft2(self.imageMatrix)
         fourierOriginal = fftshift(fourierData)
@@ -130,7 +153,8 @@ class ImageObject:
             g.savefig("Espectrograma de imagen")
         else:
             g.savefig(saveName)
-               
+
+    # Method to create an image from the imageMatrix attribute          
     def saveImage(self,name):
         self.image = Image.fromarray(self.imageMatrix.astype(np.uint8))
         self.image.save(name)
@@ -142,9 +166,11 @@ if __name__ == "__main__":
     realImage = ImageObject("lena512.bmp")
     gaussImage = copy.deepcopy(realImage)
     edgeImage = copy.deepcopy(realImage)
-    #ed2 = ImageObject("im1.png")
 
-    convolutionTest(realImage.imageMatrix,5,5)
+    isRight,realImage.imageMatrix =  convolutionTest(realImage.imageMatrix,5,5)
+
+    if(isRight == True):
+        realImage.saveImage("Test_image.png")
 
     gaussKer= np.array([[1,4,6,4,1],
                         [4, 16, 24, 16, 4],
@@ -169,11 +195,8 @@ if __name__ == "__main__":
     gaussImage.saveImage("Gauss_image.png")
 
     edgeImage.convolveImage(edgeKer)
-    edgeImage.fourierTransform("Transformada de Fourier iltro de bordes", "Fourier_Edge")
+    edgeImage.fourierTransform("Transformada de Fourier Filtro de bordes", "Fourier_Edge")
     edgeImage.saveImage("Edge_image.png")
-
-    #ed2.convolveImage(edgeKer2)
-    #ed2.saveImage("ed2.png")
 
     plt.show()
 
