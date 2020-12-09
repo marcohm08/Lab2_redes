@@ -36,7 +36,8 @@ def fillWithZeros(matrix, kernel):
     return matrix
 
 
-# Convolution function, that makes the convolution between a matrix of values of an image and a kernel, this kernel must have odd dimensions
+# Convolution function, that makes the convolution between a matrix of values of an 
+# image and a kernel, this kernel must have odd dimensions
 # inputs
 #   matrix: matrix with pixel values if an image
 #   kernel: kernel matrix wich dimension must be odd to have a central element
@@ -114,7 +115,8 @@ def convolutionTest(matrix,kernelCol,kernelRow):
     testKernel = np.array(testKernel)
     convoluted = convolve(matrix, testKernel)
 
-    # The pixel values that are compared between the original and the convoluted matrix are the pixels in the convoluted matrix than are not in the borders
+    # The pixel values that are compared between the original and the convoluted 
+    # matrix are the pixels in the convoluted matrix than are not in the borders
     # of the image
     colstart = int(kernelCol/2)
     rowStart = int(kernelRow/2)
@@ -145,6 +147,7 @@ class ImageObject:
         fourierOriginal = fftshift(fourierData)
         g = plt.figure()
         plt.imshow(np.log(abs(fourierOriginal)))
+        plt.colorbar()
         if(title == "" or title == None):    
             plt.title("Transformada de Fourier de imagen")
         else:
