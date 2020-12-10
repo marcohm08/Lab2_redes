@@ -23,14 +23,15 @@ import sys
 #   kernel: kernel matrix wich was used to convolute the original image
 # output: convoluted matrix with pixel border values equal to 0
 def fillWithZeros(matrix, kernel):
-    dim = int(len(kernel)/ 2)
+    cols = int(len(kernel)/ 2)
+    rows = int(len(kernel[0])/ 2)
     for row in matrix:
-        for i in range(0,dim):
+        for i in range(0,rows):
             row.insert(0,0)
             row.append(0)
     
     zeroRow = [0 for i in range(0,len(matrix[0]))]
-    for j in range(0,dim):
+    for j in range(0,cols):
         matrix.insert(0,zeroRow)
         matrix.append(zeroRow)
     return matrix
@@ -82,8 +83,8 @@ def convolve(matrix, kernel):
 #   False if the convolution is wrong 
 def convolutionTest(matrix,kernelCol,kernelRow):
     if(kernelCol % 2 == 0 or kernelRow % 2 == 0):
-        print("Kernel dimanesion must be odd")
-        return False
+        print("Kernel dimensions must be odd")
+        return False, matrix
     testKernel = []
     i = 0
     j = 0
@@ -124,7 +125,7 @@ def convolutionTest(matrix,kernelCol,kernelRow):
         for m in range(rowStart,len(matrix[0]) - rowStart):
             if(matrix[n][m] != convoluted[n][m]):
                 print("The convolution fails")
-                return False,[]
+                return False,matrix
     
     print("The convolution is successfull")
     return True,convoluted
@@ -167,13 +168,14 @@ if __name__ == "__main__":
     
 
     realImage = ImageObject("lena512.bmp")
+    testImage = copy.deepcopy(realImage)
     gaussImage = copy.deepcopy(realImage)
     edgeImage = copy.deepcopy(realImage)
 
-    isRight,realImage.imageMatrix =  convolutionTest(realImage.imageMatrix,5,5)
+    isRight,testImage.imageMatrix =  convolutionTest(testImage.imageMatrix,int(sys.argv[1]),int(sys.argv[2]))
 
     if(isRight == True):
-        realImage.saveImage("Test_image.png")
+        testImage.saveImage("Test_image.png")
 
     gaussKer= np.array([[1,4,6,4,1],
                         [4, 16, 24, 16, 4],
@@ -187,9 +189,6 @@ if __name__ == "__main__":
                         [1,2,0,-2,-1],
                         [1,2,0,-2,-1]])
 
-    edgeKer2= np.array([[1,0,-1],
-                        [2,0,-2],
-                        [1,0,-1]])
 
     realImage.fourierTransform("Transformada de Fourier imagen original", "Fourier_Original")
 
